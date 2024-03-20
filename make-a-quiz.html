@@ -35,15 +35,16 @@
     }
 
     .viewport .list {
-        display: flex;
-        flex-wrap: wrap; /* Allow cards to wrap to the next line */
-        justify-content: space-between; /* Distribute cards evenly */
-    }
+    display: flex;
+    flex-wrap: wrap; /* Allow cards to wrap to the next line */
+    justify-content: space-between; /* Distribute cards evenly */
+}
 
-    .viewport .card {
-        width: 50%; /* Adjust the width to make the card smaller */
-        margin-bottom: 20px; /* Add margin for spacing between cards */
-    }
+.viewport .card {
+    width: calc(33.33% - 20px); /* Adjust the width to ensure at least 3 cards fit in one row */
+    margin-bottom: 20px; /* Add margin for spacing between cards */
+}
+
 </style>
   <head>
     <meta charset="UTF-8" />
@@ -63,7 +64,7 @@
           <label for="quizTitle">Quiz Title:</label><br>
           <input type="text" id="quizTitle" name="quizTitle"><br><br>
           <button type="button" onclick="saveChanges()">Save Your Changes</button>
-          <button type="button" onclick="startNew()">Start New One</button>
+          <button type="button" onclick="startNew()">Save your changes and Start New One</button>
       </form>
   </div>
     <ul class="topnav">
@@ -81,7 +82,7 @@
     <!-- Two viewports -->
     <div class="viewport">
         <!-- Content for the first viewport -->
-        <h2>Viewport 1</h2>
+        <h2>Quiz box</h2>
         <div id="list"></div> <!-- Container for the cards -->
     </div>
     
@@ -99,98 +100,119 @@
     }
 
     async function displayTheQuestions() {
-        if (questions.length == 0) {
-            questions = await getAll();
-        }
-
-        for (let question of questions) {
-            let list = document.createElement("div");
-            list.className = "card";
-            let innerHtml = `
-                <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
-                <div class="container">
-                    <h4><b>${question.id}</b></h4> 
-                    <p>${question.description}</p>
-                    <form>
-                        <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
-                        <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
-
-                        <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
-                        <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
-
-                        <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
-                        <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
-                    </form> 
-                </div>
-            `;
-            list.innerHTML = innerHtml;
-            document.getElementById("list").appendChild(list);
-        }
+    if (questions.length == 0) {
+        questions = await getAll();
     }
-      function add() {
-        let form = document.forms[0];
-        let formData = new FormData(form);
-        // output as an object
-        let data = Object.fromEntries(formData);
-        let question = {};
-        question.description = data.description;
-        question.choices = [data.optionA, data.optionB, data.optionC];
-        switch (data.answer) {
-          case "A":
-            question.answer = data.optionA;
-            break;
-          case "B":
-            question.answer = data.optionB;
-            break;
-          case "C":
-            question.answer = data.optionC;
-            break;
-        }        
-        addTheQuestion(question, data.imageFile);
-      }
 
-      async function addTheQuestion(question, imageFile) {
-        let message = "";
+    for (let question of questions) {
+        let list = document.createElement("div");
+        list.className = "card";
+        let innerHtml = `
+            <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
+            <div class="container">
+                <h4><b>${question.id}</b></h4> 
+                <p>${question.description}</p>
+                <form>
+                    <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+                    <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
 
-        let request = {
-          method: "POST",
-          headers: {
+                    <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+                    <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+                    <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+                    <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+                </form> 
+            </div>
+        `;
+        list.innerHTML = innerHtml;
+        // Add event listener to each card element
+        list.addEventListener('click', function() {
+            addCardToQuiz(question);
+        });
+        document.getElementById("list").appendChild(list);
+    }
+}
+
+function addCardToQuiz(question) {
+    let sideBox = document.querySelector('.side-box');
+    let cardHtml = `
+        <div class="card">
+            <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
+            <div class="container">
+                <h4><b>${question.id}</b></h4> 
+                <p>${question.description}</p>
+                <form>
+                    <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+                    <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+
+                    <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+                    <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+                    <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+                    <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+                </form> 
+            </div>
+        </div>
+    `;
+    sideBox.insertAdjacentHTML('beforeend', cardHtml);
+}
+
+
+      // Function to save the changes made to the quiz
+function saveChanges() {
+    let title = document.getElementById("quizTitle").value;
+    let selectedQuestions = getSelectedQuestions();
+    
+    if (title && selectedQuestions.length > 0) {
+        let quizData = {
+            title: title,
+            questionIds: selectedQuestions
+        };
+        saveQuiz(quizData);
+    } else {
+        alert("Please enter a title and select at least one question.");
+    }
+}
+
+// Function to get the IDs of selected questions
+function getSelectedQuestions() {
+    let selectedQuestions = [];
+    let cards = document.querySelectorAll('.side-box .card');
+    cards.forEach(card => {
+        let questionId = card.querySelector('h4').innerText;
+        selectedQuestions.push(parseInt(questionId));
+    });
+    return selectedQuestions;
+}
+
+// Function to save the quiz data
+async function saveQuiz(quizData) {
+    let request = {
+        method: "POST",
+        headers: {
             "Content-Type": "application/json",
-          },
-          body: JSON.stringify(question),
-        };
-        let response = await fetch(host + "/questions", request);
-        if (response.status == 200) {
-          let id = await response.json();
-          let result = await submitTheImage(id, imageFile);
-          if (result) {
-            message = "The question was added successfully!";
-          } else {
-            message =
-              "Something went wrong! Question data was saved successfully but question image was not saved.";
-          }
-        } else {
-          console.log(response);
-          message = "Something went wrong! Question data could not be saved.";
-        }
-        alert(message);
-        location.href = "add-question.html";
-      }
+        },
+        body: JSON.stringify(quizData),
+    };
 
-      async function submitTheImage(id, imageFile) {
-        let formData = new FormData();
-        formData.append("file", imageFile);
-        let request = {
-          method: "POST",
-          body: formData,
-        };
-        let response = await fetch(
-          host + "/questions/" + id + "/image",
-          request
-        );
-        let result = await response.json();
-        return result;
-      }
+    let response = await fetch(host + "/quizzes", request);
+    if (response.status == 200) {
+        alert("Quiz saved successfully!");
+        // Redirect to some page or perform any other action after saving the quiz
+    } else {
+        alert("Failed to save the quiz.");
+        console.log(response);
+    }
+}
+function startNew() {
+    saveChanges(); // Save the changes first
+    
+    // Clear all cards from the Create Quiz container
+    let createQuizContainer = document.querySelector('.side-box .list');
+    createQuizContainer.innerHTML = "";
+}
+
+
     </script>
   </body>
 </html>
