@@ -1,5 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
+<style>
+    /* CSS for dividing the page into two boxes */
+    
+
+    .box {
+        width: 95%; /* Adjust as needed */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .up,
+    .down {
+        height: 50%; /* Each box takes 50% of the height */
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        overflow: auto; /* Add scrollbars if content overflows */
+    }
+
+    /* Add any additional styles for specific elements if needed */
+</style>
+
+
+</style>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,24 +44,29 @@
       <li><a class="active" href="take-a-quiz.html">Take a quiz</a></li>
       <li class="right"><a href="#about">About</a></li>
     </ul>
-
+   
+      <!-- First box -->
+      <div class="container">
+        <!-- First box -->
+        <div class="box">
+            <div class="up" id="quizContainer"></div>
+            <div class="down"></div>
+        </div>
+        <!-- Second box -->
+        <div class="box">
+            <div class="up">
+                <!-- Add any content for the upper part of the second box here -->
+            </div>
+            <div class="down">
+                <!-- Add any content for the lower part of the second box here -->
+                <div id="list" class="cards"></div>
+            </div>
+        </div>
+    </div>
+  
+  
     
-      <!-- Options -->
-      <label>Options:</label><br />
-      <input type="radio" id="optionA" name="answer" value="A" required />
-      <label for="optionA">A. </label>
-      <input type="text" id="optionAText" name="optionA" required /><br />
-
-      <input type="radio" id="optionB" name="answer" value="B" required />
-      <label for="optionB">B. </label>
-      <input type="text" id="optionBText" name="optionB" required /><br />
-
-      <input type="radio" id="optionC" name="answer" value="C" required />
-      <label for="optionC">C. </label>
-      <input type="text" id="optionCText" name="optionC" required /><br />
-
-      <!-- Submit Button -->
-      <input type="button" value="Add The Question" onclick="add()" />
+      
     </form>
 
     <div id="list" class="cards"></div>
@@ -42,17 +74,72 @@
     <script>
       let host = "http://localhost:8080";
       let questions = [];
+      let quizzes = [];
       displayTheQuestions();
+      displayTheQuizzes();
 
       async function getAll() {
         let response = await fetch(host + "/questions");
         let result = await response.json();
         return result;
       }
+      async function getAllQuizzes() {
+      let response = await fetch("http://localhost:8080/quizzes");
+      let quizzes = await response.json();
+      return quizzes;
+    }
 
+    // Function to display quizzes in the container
+   // Function to display quizzes in the container
+async function displayTheQuizzes() {
+    const container = document.getElementById("quizContainer");
+    const quizzes = await getAllQuizzes();
+
+    // Clear container before adding quizzes
+    container.innerHTML = "";
+
+    quizzes.forEach(quiz => {
+        const quizCard = document.createElement("div");
+        quizCard.classList.add("quiz-card"); // Adding quiz-card class here
+        quizCard.innerHTML = `
+            <h3>${quiz.title}</h3>
+            <p>${quiz.questionIds}</p>
+            <a href="#" onclick="startQuiz(${quiz.id}); return false;">Start Quiz</a>
+                `;
+        container.appendChild(quizCard);
+    });
+}
+
+    // Function to display questions in the "down" box
+    function displayQuestions(questions) {
+        const downBox = document.querySelector('.down');
+        downBox.innerHTML = ''; // Clear previous content
+        
+        questions.forEach(question => {
+            const questionDiv = document.createElement('div');
+            questionDiv.classList.add('question');
+            questionDiv.innerHTML = `
+                <h4>${question.title}</h4>
+                <p>${question.content}</p>
+                <!-- Add more details as needed -->
+            `;
+            downBox.appendChild(questionDiv);
+        });
+    }
+
+
+        // Display quizzes when the page loads
+        window.onload = displayQuizzes;
+
+
+    // Display quizzes when the page loads
+    window.onload = displayTheQuizzes;
       async function displayTheQuestions() {
-        if (questions.length == 0) {
-          questions = await getAll();
+
+        async function displayTheQuizzes() {
+          if(quizzes.length == 0) {
+            quizzes = await getAllQuizzes();
+          }
         }
 
         let list = document.getElementById("list");
@@ -61,94 +148,22 @@
         for (let question of questions) {
           let div = document.createElement("div");
           div.className = "card";
-          let innerHtml = `
-         
-        <img src="http://localhost:8080/questions/${question.id}/image" alt="question" style="width:100%">
-        <div class="container">
-          <h4><b>${question.id}</b></h4> 
-          <p>${question.description}</p>
-          <form>
-              <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
-              <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
-
-              <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
-              <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
-
-              <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
-              <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
-          </form> 
-        </div>
-     
-            `;
+          let innerHtml = ';'
           div.innerHTML = innerHtml;
           list.appendChild(div);
         }
       }
+      async function startQuiz(quizId) {
+        try {
+            const quiz = await getQuizById(quizId);
+            const questions = await getQuestionsForQuiz(quiz);
 
-      function add() {
-        let form = document.forms[0];
-        let formData = new FormData(form);
-        // output as an object
-        let data = Object.fromEntries(formData);
-        let question = {};
-        question.description = data.description;
-        question.choices = [data.optionA, data.optionB, data.optionC];
-        switch (data.answer) {
-          case "A":
-            question.answer = data.optionA;
-            break;
-          case "B":
-            question.answer = data.optionB;
-            break;
-          case "C":
-            question.answer = data.optionC;
-            break;
-        }        
-        addTheQuestion(question, data.imageFile);
-      }
-
-      async function addTheQuestion(question, imageFile) {
-        let message = "";
-
-        let request = {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(question),
-        };
-        let response = await fetch(host + "/questions", request);
-        if (response.status == 200) {
-          let id = await response.json();
-          let result = await submitTheImage(id, imageFile);
-          if (result) {
-            message = "The question was added successfully!";
-          } else {
-            message =
-              "Something went wrong! Question data was saved successfully but question image was not saved.";
-          }
-        } else {
-          console.log(response);
-          message = "Something went wrong! Question data could not be saved.";
+            // Display questions in the "down" box
+            displayQuestions(questions);
+        } catch (error) {
+            console.error("Error starting quiz:", error.message);
         }
-        alert(message);
-        location.href = "add-question.html";
-      }
-
-      async function submitTheImage(id, imageFile) {
-        let formData = new FormData();
-        formData.append("file", imageFile);
-        let request = {
-          method: "POST",
-          body: formData,
-        };
-        let response = await fetch(
-          host + "/questions/" + id + "/image",
-          request
-        );
-        let result = await response.json();
-        return result;
-      }
+    }
     </script>
   </body>
 </html>

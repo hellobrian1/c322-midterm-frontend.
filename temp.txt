@@ -1,19 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
   <style>
-     /* CSS styles for the two viewports */
-    /* CSS styles for the two viewports */
-    .viewport {
-            width: calc(100% - 420px); /* Adjust the width to consider the total width of the side box */
-            height: 100vh;
-            box-sizing: border-box;
-            padding: 20px;
-            border: 1px solid #ccc;
-            float: left; /* Float the viewport to the left */
-        }
 
-        /* Style for the side box */
-        .side-box {
+
+/* CSS for dividing the page into two boxes */
+.container {
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
+        width: 100%;
+        height: 100vh;
+        box-sizing: border-box;
+    }
+
+    .box {
+        width: 95%; /* Each box takes 50% of the width */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .left,
+    .right {
+        width: 95%; /* Each box takes 50% of the width */
+        border: 1px solid #ccc;
+        margin-right: 10px;
+        overflow: auto; /* Add scrollbars if content overflows */
+    }
+
+
+
+
+       /* Side box for Create Quiz */
+       .side-box {
             width: 300px; /* Set the width of the side box */
             height: 100vh;
             box-sizing: border-box;
@@ -24,26 +45,16 @@
 
         /* Responsive styles */
         @media (max-width: 768px) {
-            .viewport, .side-box {
-                width: 100%; /* Set both viewports to take up full width on smaller screens */
+            .side-box {
+                width: 100%; /* Set the side box to take up full width on smaller screens */
                 float: none; /* Remove floating */
             }
         }
 
-    .viewport:nth-child(1) {
-        width: calc(59% - 2px); /* Adjust width of the first viewport */
-    }
-
-    .viewport .list {
-    display: flex;
-    flex-wrap: wrap; /* Allow cards to wrap to the next line */
-    justify-content: space-between; /* Distribute cards evenly */
-}
-
-.viewport .card {
-    width: calc(33.33% - 20px); /* Adjust the width to ensure at least 3 cards fit in one row */
-    margin-bottom: 20px; /* Add margin for spacing between cards */
-}
+        /* Quiz Title Form */
+        #quizTitle {
+            margin-bottom: 10px;
+        }
 
 </style>
   <head>
@@ -57,16 +68,7 @@
   </head>
   <body>
     <!-- Side box for Create Quiz -->
-    <div class="side-box">
-      <h2>Create Quiz</h2>
-      <!-- Add your functionality components here -->
-      <form>
-          <label for="quizTitle">Quiz Title:</label><br>
-          <input type="text" id="quizTitle" name="quizTitle"><br><br>
-          <button type="button" onclick="saveChanges()">Save Your Changes</button>
-          <button type="button" onclick="startNew()">Save your changes and Start New One</button>
-      </form>
-  </div>
+    
     <ul class="topnav">
       <li><a  href="index.html">Home</a></li>
       <li><a href="add-question.html">Add questions</a></li>
@@ -75,16 +77,39 @@
       <li class="right"><a href="#about">About</a></li>
     </ul>
 
-    <form>
-      <!-- Question Text -->
-      <label for="questionText">Question Box</label><br /><br />     
-    </form>
-    <!-- Two viewports -->
-    <div class="viewport">
-        <!-- Content for the first viewport -->
-        <h2>Quiz box</h2>
-        <div id="list"></div> <!-- Container for the cards -->
-    </div>
+    <div class="container">
+      <!-- First box -->
+      <div class="box">
+          <div class="left">
+              <!-- Display the cards in the quiz box -->
+              <div id="quizContainer" class="quiz-container"></div>
+          </div>
+          <div class="right">
+              <!-- Add any content for the right side here -->
+              <div id="list" class="cards"></div>
+          </div>
+      </div>
+      
+      <!-- Second box -->
+      <div class="box">
+          <div class="left">
+              <!-- Add content for creating a quiz -->
+              <h2>Create a Quiz</h2>
+              <!-- Add your form or content for creating a quiz here -->
+              <form id="createQuizForm">
+                  
+                <input type="text" name="quizTitle" id="quizTitle" placeholder="Quiz Title">
+                <button type="submit" onclick="saveQuiz()">Save Quiz</button>
+                <button type="button" onclick="startNew()">Create New</button>
+
+              </form>
+          </div>
+          <div class="right">
+              <!-- Add any content for the right side here -->
+          </div>
+      </div>
+  </div>
+  
     
     
 
@@ -133,8 +158,9 @@
     }
 }
 
+// Function to add a selected card to the create quiz box
 function addCardToQuiz(question) {
-    let sideBox = document.querySelector('.side-box');
+    let createQuizBox = document.querySelector('.box:nth-child(2) .left');
     let cardHtml = `
         <div class="card">
             <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
@@ -154,12 +180,12 @@ function addCardToQuiz(question) {
             </div>
         </div>
     `;
-    sideBox.insertAdjacentHTML('beforeend', cardHtml);
+    createQuizBox.insertAdjacentHTML('beforeend', cardHtml);
 }
 
 
-      // Function to save the changes made to the quiz
-function saveChanges() {
+// Function to handle the saving of the quiz
+async function saveQuiz() {
     let title = document.getElementById("quizTitle").value;
     let selectedQuestions = getSelectedQuestions();
     
@@ -168,7 +194,20 @@ function saveChanges() {
             title: title,
             questionIds: selectedQuestions
         };
-        saveQuiz(quizData);
+        let response = await fetch(host + "/quizzes", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(quizData),
+        });
+
+        if (response.ok) {
+            alert("Quiz saved successfully!");
+            // Reset the form or perform any other action after saving the quiz
+        } else {
+            alert("Failed to save the quiz.");
+        }
     } else {
         alert("Please enter a title and select at least one question.");
     }
@@ -177,7 +216,7 @@ function saveChanges() {
 // Function to get the IDs of selected questions
 function getSelectedQuestions() {
     let selectedQuestions = [];
-    let cards = document.querySelectorAll('.side-box .card');
+    let cards = document.querySelectorAll('.box:nth-child(1) .card');
     cards.forEach(card => {
         let questionId = card.querySelector('h4').innerText;
         selectedQuestions.push(parseInt(questionId));
@@ -185,31 +224,23 @@ function getSelectedQuestions() {
     return selectedQuestions;
 }
 
-// Function to save the quiz data
-async function saveQuiz(quizData) {
-    let request = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(quizData),
-    };
+// Event listener to handle clicking on cards in the quiz box
+document.querySelectorAll('.box:nth-child(1) .card').forEach(card => {
+    card.addEventListener('click', function() {
+        let question = {
+            id: this.querySelector('h4').innerText,
+            description: this.querySelector('p').innerText,
+            choices: Array.from(this.querySelectorAll('label')).map(label => label.innerText),
+        };
+        addCardToQuiz(question);
+    });
+});
 
-    let response = await fetch(host + "/quizzes", request);
-    if (response.status == 200) {
-        alert("Quiz saved successfully!");
-        // Redirect to some page or perform any other action after saving the quiz
-    } else {
-        alert("Failed to save the quiz.");
-        console.log(response);
-    }
-}
+
 function startNew() {
     saveChanges(); // Save the changes first
     
-    // Clear all cards from the Create Quiz container
-    let createQuizContainer = document.querySelector('.side-box .list');
-    createQuizContainer.innerHTML = "";
+    
 }
 
 
