@@ -23,6 +23,7 @@
     }
 
     /* Add any additional styles for specific elements if needed */
+    
 </style>
 
 
@@ -50,7 +51,7 @@
         <!-- First box -->
         <div class="box">
             <div class="up" id="quizContainer"></div>
-            <div class="down"></div>
+            <div class="down" id="questionContainer"></div>
         </div>
         <!-- Second box -->
         <div class="box">
@@ -58,8 +59,10 @@
                 <!-- Add any content for the upper part of the second box here -->
             </div>
             <div class="down">
-                <!-- Add any content for the lower part of the second box here -->
+                <!-- Navigation buttons for questions -->
+                <button onclick="previousQuestion()">Previous</button>
                 <div id="list" class="cards"></div>
+                <button onclick="nextQuestion()">Next</button>
             </div>
         </div>
     </div>
@@ -69,7 +72,7 @@
       
     </form>
 
-    <div id="list" class="cards"></div>
+    
 
     <script>
       let host = "http://localhost:8080";
@@ -83,8 +86,13 @@
         let result = await response.json();
         return result;
       }
+      async function getQuizById(quizId) {
+            let response = await fetch(`${host}/quizzes/${quizId}`);
+            let quiz = await response.json();
+            return quiz;
+        }
       async function getAllQuizzes() {
-      let response = await fetch("http://localhost:8080/quizzes");
+      let response = await fetch(host +"/quizzes");
       let quizzes = await response.json();
       return quizzes;
     }
@@ -104,28 +112,35 @@ async function displayTheQuizzes() {
         quizCard.innerHTML = `
             <h3>${quiz.title}</h3>
             <p>${quiz.questionIds}</p>
-            <a href="#" onclick="startQuiz(${quiz.id}); return false;">Start Quiz</a>
+            <button onclick="startQuiz(${quiz.id});">Start Quiz</button>
                 `;
         container.appendChild(quizCard);
     });
 }
 
-    // Function to display questions in the "down" box
-    function displayQuestions(questions) {
-        const downBox = document.querySelector('.down');
-        downBox.innerHTML = ''; // Clear previous content
-        
-        questions.forEach(question => {
-            const questionDiv = document.createElement('div');
-            questionDiv.classList.add('question');
-            questionDiv.innerHTML = `
-                <h4>${question.title}</h4>
-                <p>${question.content}</p>
-                <!-- Add more details as needed -->
-            `;
-            downBox.appendChild(questionDiv);
-        });
-    }
+async function displayQuestionById(questionId) {
+            let question = questions.find(q => q.id === questionId);
+            if (question) {
+                let questionContainer = document.getElementById("questionContainer");
+                questionContainer.innerHTML = `
+                    <div class="card">
+                        <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
+                        <div class="container">
+                            <h4><b>${question.id}</b></h4> 
+                            <p>${question.description}</p>
+                            <form>
+                                <input type="radio" id="optionA" name="answer" value="A">
+                                <label for="optionA">${question.choices[0]}</label><br>
+                                <input type="radio" id="optionB" name="answer" value="B">
+                                <label for="optionB">${question.choices[1]}</label><br>
+                                <input type="radio" id="optionC" name="answer" value="C">
+                                <label for="optionC">${question.choices[2]}</label><br>       
+                            </form> 
+                        </div>
+                    </div>
+                `;
+            }
+        }
 
 
         // Display quizzes when the page loads
@@ -154,16 +169,35 @@ async function displayTheQuizzes() {
         }
       }
       async function startQuiz(quizId) {
-        try {
-            const quiz = await getQuizById(quizId);
-            const questions = await getQuestionsForQuiz(quiz);
+    // Fetch quiz details including question IDs
+    let quiz = await getQuizById(quizId);
+    let questionIds = quiz.questionIds;
 
-            // Display questions in the "down" box
-            displayQuestions(questions);
-        } catch (error) {
-            console.error("Error starting quiz:", error.message);
-        }
-    }
+    // Fetch details of each question
+    questions = await Promise.all(questionIds.map(async questionId => {
+        let question = await getQuestionById(questionId);
+        return question;
+    }));
+
+    // Display the first question
+    displayQuestionById(questions[0].id);
+}
+async function getQuestionById(questionId) {
+    let response = await fetch(`${host}/questions/${questionId}`);
+    let question = await response.json();
+    return question;
+}
+
+
+
+        let currentQuestionIndex = 0;
+
+
+
+        // Display quizzes when the page loads
+        window.onload = displayTheQuizzes;
+      
     </script>
   </body>
 </html>
+

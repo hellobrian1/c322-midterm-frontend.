@@ -4,13 +4,14 @@
      /* CSS styles for the two viewports */
     /* CSS styles for the two viewports */
     .viewport {
-            width: calc(100% - 420px); /* Adjust the width to consider the total width of the side box */
-            height: 100vh;
-            box-sizing: border-box;
-            padding: 20px;
-            border: 1px solid #ccc;
-            float: left; /* Float the viewport to the left */
-        }
+    width: calc(100% - 420px); /* Adjust the width to consider the total width of the side box */
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 20px;
+    border: none; /* Remove the border */
+    float: left; /* Float the viewport to the left */
+}
+
 
         /* Style for the side box */
         .side-box {
@@ -56,17 +57,7 @@
     
   </head>
   <body>
-    <!-- Side box for Create Quiz -->
-    <div class="side-box">
-      <h2>Create Quiz</h2>
-      <!-- Add your functionality components here -->
-      <form>
-          <label for="quizTitle">Quiz Title:</label><br>
-          <input type="text" id="quizTitle" name="quizTitle"><br><br>
-          <button type="button" onclick="saveChanges()">Save Your Changes</button>
-          <button type="button" onclick="startNew()">Save your changes and Start New One</button>
-      </form>
-  </div>
+
     <ul class="topnav">
       <li><a  href="index.html">Home</a></li>
       <li><a href="add-question.html">Add questions</a></li>
@@ -74,7 +65,17 @@
       <li><a href="take-a-quiz.html">Take a quiz</a></li>
       <li class="right"><a href="#about">About</a></li>
     </ul>
-
+    <div class="side-box">
+        <h2>Create Quiz</h2>
+        <!-- Add your functionality components here -->
+        <form>
+            <label for="quizTitle">Quiz Title:</label><br>
+            <input type="text" id="quizTitle" name="quizTitle"><br><br>
+            <label for="numberOfQuestions">NumberOfquestions</label><br>
+            <button type="button" onclick="saveChanges()">Save Your Changes</button>
+            <button type="button" onclick="startNew()">Save your changes and Start New One</button>
+        </form>
+    </div>
     <form>
       <!-- Question Text -->
       <label for="questionText">Question Box</label><br /><br />     
@@ -133,56 +134,69 @@
     }
 }
 
-function addCardToQuiz(question) {
-    let sideBox = document.querySelector('.side-box');
-    let cardHtml = `
-        <div class="card">
-            <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
-            <div class="container">
-                <h4><b>${question.id}</b></h4> 
-                <p>${question.description}</p>
-                <form>
-                    <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
-                    <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+    // Function to add a card to the quiz
+    function addCardToQuiz(question) {
+        let sideBox = document.querySelector('.side-box');
+        let cardHtml = `
+            <div class="card">
+                <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
+                <div class="container">
+                    <h4><b>${question.id}</b></h4> 
+                    <p>${question.description}</p>
+                    <form>
+                        <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+                        <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
 
-                    <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
-                    <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+                        <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+                        <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
 
-                    <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
-                    <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
-                </form> 
+                        <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+                        <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+                    </form> 
+                </div>
             </div>
-        </div>
-    `;
-    sideBox.insertAdjacentHTML('beforeend', cardHtml);
-}
-
-
-      // Function to save the changes made to the quiz
-function saveChanges() {
-    let title = document.getElementById("quizTitle").value;
-    let selectedQuestions = getSelectedQuestions();
-    
-    if (title && selectedQuestions.length > 0) {
-        let quizData = {
-            title: title,
-            questionIds: selectedQuestions
-        };
-        saveQuiz(quizData);
-    } else {
-        alert("Please enter a title and select at least one question.");
+        `;
+        sideBox.insertAdjacentHTML('beforeend', cardHtml);
+        updateQuestionCount(); // Update question count
     }
-}
 
-// Function to get the IDs of selected questions
-function getSelectedQuestions() {
-    let selectedQuestions = [];
-    let cards = document.querySelectorAll('.side-box .card');
-    cards.forEach(card => {
-        let questionId = card.querySelector('h4').innerText;
-        selectedQuestions.push(parseInt(questionId));
-    });
-    return selectedQuestions;
+    // Function to update the question count inside the Create Quiz box
+    function updateQuestionCount() {
+        let count = document.querySelectorAll('.side-box .card').length;
+        let createQuizBox = document.querySelector('.side-box h2');
+        createQuizBox.innerText = `Create Quiz (${count} questions)`;
+    }
+
+    // Function to save the changes made to the quiz
+    function saveChanges() {
+        let title = document.getElementById("quizTitle").value;
+        let selectedQuestions = getSelectedQuestions();
+        
+        if (title && selectedQuestions.length > 0) {
+            let quizData = {
+                title: title,
+                questionIds: selectedQuestions
+            };
+            saveQuiz(quizData);
+        } else {
+            alert("Please enter a title and select at least one question.");
+        }
+    }
+
+    // Function to get the IDs of selected questions and update the question count
+    function getSelectedQuestions() {
+        let selectedQuestions = [];
+        let cards = document.querySelectorAll('.side-box .card');
+        cards.forEach((card, index) => {
+            let questionId = card.querySelector('h4').innerText;
+            selectedQuestions.push(parseInt(questionId));
+        });
+        return selectedQuestions;
+    }
+// Function to update the question count inside the Create Quiz box
+function updateQuestionCount(count) {
+    let createQuizBox = document.querySelector('.side-box h2');
+    createQuizBox.innerText = `Create Quiz (${count} questions)`;
 }
 
 // Function to save the quiz data
@@ -206,11 +220,16 @@ async function saveQuiz(quizData) {
 }
 function startNew() {
     saveChanges(); // Save the changes first
+        resetForm(); // Reset the form
     
-    // Clear all cards from the Create Quiz container
-    let createQuizContainer = document.querySelector('.side-box .list');
-    createQuizContainer.innerHTML = "";
+    
 }
+// Function to reset the form
+function resetForm() {
+         location.href = "make-a-quiz.html";
+
+
+    }
 
 
     </script>
