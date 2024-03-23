@@ -135,37 +135,38 @@
 }
 
     // Function to add a card to the quiz
-    function addCardToQuiz(question) {
-        let sideBox = document.querySelector('.side-box');
-        let cardHtml = `
-            <div class="card">
-                <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
-                <div class="container">
-                    <h4><b>${question.id}</b></h4> 
-                    <p>${question.description}</p>
-                    <form>
-                        <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
-                        <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+function addCardToQuiz(question) {
+    let sideBox = document.querySelector('.side-box');
+    let cardHtml = `
+        <div class="card">
+            <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
+            <div class="container">
+                <h4><b>${question.id}</b></h4> 
+                <p>${question.description}</p>
+                <form>
+                    <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+                    <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
 
-                        <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
-                        <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+                    <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+                    <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
 
-                        <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
-                        <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
-                    </form> 
-                </div>
+                    <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+                    <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+                </form> 
             </div>
-        `;
-        sideBox.insertAdjacentHTML('beforeend', cardHtml);
-        updateQuestionCount(); // Update question count
-    }
+        </div>
+    `;
+    sideBox.insertAdjacentHTML('beforeend', cardHtml);
+    updateQuestionCount(); // Update question count
+}
 
-    // Function to update the question count inside the Create Quiz box
-    function updateQuestionCount() {
-        let count = document.querySelectorAll('.side-box .card').length;
-        let createQuizBox = document.querySelector('.side-box h2');
-        createQuizBox.innerText = `Create Quiz (${count} questions)`;
-    }
+// Function to update the question count inside the Create Quiz box
+function updateQuestionCount() {
+    let count = document.querySelectorAll('.side-box .card').length;
+    let numberOfQuestionsLabel = document.querySelector('label[for="numberOfQuestions"]');
+    numberOfQuestionsLabel.textContent = `Number of questions: ${count}`;
+}
+
 
     // Function to save the changes made to the quiz
     function saveChanges() {
@@ -193,11 +194,8 @@
         });
         return selectedQuestions;
     }
-// Function to update the question count inside the Create Quiz box
-function updateQuestionCount(count) {
-    let createQuizBox = document.querySelector('.side-box h2');
-    createQuizBox.innerText = `Create Quiz (${count} questions)`;
-}
+
+
 
 // Function to save the quiz data
 async function saveQuiz(quizData) {

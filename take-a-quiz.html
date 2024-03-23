@@ -61,6 +61,7 @@
             <div class="down">
                 <!-- Navigation buttons for questions -->
                 <button onclick="previousQuestion()">Previous</button>
+
                 <div id="list" class="cards"></div>
                 <button onclick="nextQuestion()">Next</button>
             </div>
@@ -142,20 +143,15 @@ async function displayQuestionById(questionId) {
             }
         }
 
-
-        // Display quizzes when the page loads
-        window.onload = displayQuizzes;
-
-
     // Display quizzes when the page loads
     window.onload = displayTheQuizzes;
       async function displayTheQuestions() {
 
-        async function displayTheQuizzes() {
+        
           if(quizzes.length == 0) {
             quizzes = await getAllQuizzes();
           }
-        }
+        
 
         let list = document.getElementById("list");
         list.innerHTML = "";
@@ -188,9 +184,41 @@ async function getQuestionById(questionId) {
     return question;
 }
 
+let currentQuestionIndex = 0; // Variable to keep track of the current question index
+
+// Function to display the next question
+function nextQuestion() {
+    // Increment the current question index
+    currentQuestionIndex++;
+
+    // Check if there are more questions
+    if (currentQuestionIndex < questions.length) {
+        // Display the next question
+        displayQuestionById(questions[currentQuestionIndex].id);
+    } else {
+        // If there are no more questions, you can handle this scenario here
+        console.log("No more questions.");
+    }
+}
+
+// Function to display the previous question (if needed)
+function previousQuestion() {
+    // Decrement the current question index
+    currentQuestionIndex--;
+
+    // Check if the current question index is valid
+    if (currentQuestionIndex >= 0) {
+        // Display the previous question
+        displayQuestionById(questions[currentQuestionIndex].id);
+    } else {
+        // If the current question index is less than 0, it means it's the first question
+        console.log("Already at the first question.");
+    }
+}
 
 
-        let currentQuestionIndex = 0;
+
+
 
 
 
