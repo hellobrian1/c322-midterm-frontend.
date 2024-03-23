@@ -2,112 +2,123 @@
 <html lang="en">
 
 <style>
-    /* CSS for dividing the page into two boxes */
-    
+  /* CSS for dividing the page into two boxes */
 
-    .box {
-        width: 95%; /* Adjust as needed */
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        border: 1px solid #ccc;
-        padding: 10px;
-    }
 
-    .up,
-    .down {
-        height: 50%; /* Each box takes 50% of the height */
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-        overflow: auto; /* Add scrollbars if content overflows */
-    }
+  .box {
+    width: 95%;
+    /* Adjust as needed */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
 
-    /* Add any additional styles for specific elements if needed */
-    
+  .up,
+  .down {
+    height: 50%;
+    /* Each box takes 50% of the height */
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    overflow: auto;
+    /* Add scrollbars if content overflows */
+  }
+
+  /* Hide the Next, Submit, and Previous buttons by default */
+  #nextButton,
+  #submitButton,
+  #previousButton {
+    display: none;
+  }
+
+  /* Add any additional styles for specific elements if needed */
 </style>
 
 
 </style>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>take a quiz</title>
-    <link rel="stylesheet" href="navbar.css">
-    <link rel="stylesheet" href="general.css">
-    <link rel="stylesheet" href="cards.css">
-    <link rel="stylesheet" href="quiz.css">
-  </head>
-  <body>
-    <ul class="topnav">
-      <li><a  href="index.html">Home</a></li>
-      <li><a href="add-question.html">Add questions</a></li>
-      <li><a href="make-a-quiz.html">Create a quiz</a></li>
-      <li><a class="active" href="take-a-quiz.html">Take a quiz</a></li>
-      <li class="right"><a href="#about">About</a></li>
-    </ul>
-   
-      <!-- First box -->
-      <div class="container">
-        <!-- First box -->
-        <div class="box">
-            <div class="up" id="quizContainer"></div>
-            <div class="down" id="questionContainer"></div>
-        </div>
-        <!-- Second box -->
-        <div class="box">
-            <div class="up">
-                <!-- Add any content for the upper part of the second box here -->
-            </div>
-            <div class="down">
-                <!-- Navigation buttons for questions -->
-                <button onclick="previousQuestion()">Previous</button>
 
-                <div id="list" class="cards"></div>
-                <button onclick="nextQuestion()">Next</button>
-            </div>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>take a quiz</title>
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="general.css">
+  <link rel="stylesheet" href="cards.css">
+  <link rel="stylesheet" href="quiz.css">
+</head>
+
+<body>
+  <ul class="topnav">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="add-question.html">Add questions</a></li>
+    <li><a href="make-a-quiz.html">Create a quiz</a></li>
+    <li><a class="active" href="take-a-quiz.html">Take a quiz</a></li>
+    <li class="right"><a href="#about">About</a></li>
+  </ul>
+
+  <!-- First box -->
+  <div class="container">
+    <!-- First box -->
+    <div class="box">
+      <div class="up" id="quizContainer"></div>
+      <div class="down" id="questionContainer"></div>
     </div>
-  
-  
-    
-      
-    </form>
+    <!-- Second box -->
+    <div class="box">
+      <div class="up">
+        <!-- Add any content for the upper part of the second box here -->
+      </div>
+      <div class="down">
+        <!-- Navigation buttons for questions -->
+        <button id="previousButton" onclick="previousQuestion()" style="display: none;">Previous</button>
+        <label id="questionNumber"></label>
+        <div id="list" class="cards"></div>
+        <button id="nextButton" onclick="nextQuestion()">Next</button>
+      </div>
+    </div>
+  </div>
 
-    
 
-    <script>
-      let host = "http://localhost:8080";
-      let questions = [];
-      let quizzes = [];
-      displayTheQuestions();
-      displayTheQuizzes();
 
-      async function getAll() {
-        let response = await fetch(host + "/questions");
-        let result = await response.json();
-        return result;
-      }
-      async function getQuizById(quizId) {
-            let response = await fetch(`${host}/quizzes/${quizId}`);
-            let quiz = await response.json();
-            return quiz;
-        }
-      async function getAllQuizzes() {
-      let response = await fetch(host +"/quizzes");
+
+  </form>
+
+
+
+  <script>
+    let host = "http://localhost:8080";
+    let questions = [];
+    let quizzes = [];
+    displayTheQuestions();
+    displayTheQuizzes();
+
+    async function getAll() {
+      let response = await fetch(host + "/questions");
+      let result = await response.json();
+      return result;
+    }
+    async function getQuizById(quizId) {
+      let response = await fetch(`${host}/quizzes/${quizId}`);
+      let quiz = await response.json();
+      return quiz;
+    }
+    async function getAllQuizzes() {
+      let response = await fetch(host + "/quizzes");
       let quizzes = await response.json();
       return quizzes;
     }
 
     // Function to display quizzes in the container
-   // Function to display quizzes in the container
-async function displayTheQuizzes() {
-    const container = document.getElementById("quizContainer");
-    const quizzes = await getAllQuizzes();
+    // Function to display quizzes in the container
+    async function displayTheQuizzes() {
+      const container = document.getElementById("quizContainer");
+      const quizzes = await getAllQuizzes();
 
-    // Clear container before adding quizzes
-    container.innerHTML = "";
+      // Clear container before adding quizzes
+      container.innerHTML = "";
 
-    quizzes.forEach(quiz => {
+      quizzes.forEach(quiz => {
         const quizCard = document.createElement("div");
         quizCard.classList.add("quiz-card"); // Adding quiz-card class here
         quizCard.innerHTML = `
@@ -116,116 +127,179 @@ async function displayTheQuizzes() {
             <button onclick="startQuiz(${quiz.id});">Start Quiz</button>
                 `;
         container.appendChild(quizCard);
-    });
-}
+      });
+    }
 
-async function displayQuestionById(questionId) {
-            let question = questions.find(q => q.id === questionId);
-            if (question) {
-                let questionContainer = document.getElementById("questionContainer");
-                questionContainer.innerHTML = `
-                    <div class="card">
-                        <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
-                        <div class="container">
-                            <h4><b>${question.id}</b></h4> 
-                            <p>${question.description}</p>
-                            <form>
-                                <input type="radio" id="optionA" name="answer" value="A">
-                                <label for="optionA">${question.choices[0]}</label><br>
-                                <input type="radio" id="optionB" name="answer" value="B">
-                                <label for="optionB">${question.choices[1]}</label><br>
-                                <input type="radio" id="optionC" name="answer" value="C">
-                                <label for="optionC">${question.choices[2]}</label><br>       
-                            </form> 
-                        </div>
-                    </div>
-                `;
-            }
-        }
+    let userAnswers = []; // Array to store user answers
+
+    async function displayQuestionById(questionId) {
+      let question = questions.find(q => q.id === questionId);
+      if (question) {
+        let questionContainer = document.getElementById("questionContainer");
+        questionContainer.innerHTML = `
+        <div class="card">
+            <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
+            <div class="container">
+                <h4><b>${question.id}</b></h4> 
+                <p>${question.description}</p>
+                <form id="questionForm">
+                    <input type="radio" id="optionA" name="answer" value="A">
+                    <label for="optionA">${question.choices[0]}</label><br>
+                    <input type="radio" id="optionB" name="answer" value="B">
+                    <label for="optionB">${question.choices[1]}</label><br>
+                    <input type="radio" id="optionC" name="answer" value="C">
+                    <label for="optionC">${question.choices[2]}</label><br>       
+                </form> 
+            </div>
+        </div>
+    `;
+      }
+    }
 
     // Display quizzes when the page loads
     window.onload = displayTheQuizzes;
-      async function displayTheQuestions() {
+    async function displayTheQuestions() {
 
-        
-          if(quizzes.length == 0) {
-            quizzes = await getAllQuizzes();
-          }
-        
 
-        let list = document.getElementById("list");
-        list.innerHTML = "";
-
-        for (let question of questions) {
-          let div = document.createElement("div");
-          div.className = "card";
-          let innerHtml = ';'
-          div.innerHTML = innerHtml;
-          list.appendChild(div);
-        }
+      if (quizzes.length == 0) {
+        quizzes = await getAllQuizzes();
       }
-      async function startQuiz(quizId) {
-    // Fetch quiz details including question IDs
-    let quiz = await getQuizById(quizId);
-    let questionIds = quiz.questionIds;
 
-    // Fetch details of each question
-    questions = await Promise.all(questionIds.map(async questionId => {
+
+      let list = document.getElementById("list");
+      list.innerHTML = "";
+
+      for (let question of questions) {
+        let div = document.createElement("div");
+        div.className = "card";
+        let innerHtml = ';'
+        div.innerHTML = innerHtml;
+        list.appendChild(div);
+      }
+    }
+    async function startQuiz(quizId) {
+      // Fetch quiz details including question IDs
+      let quiz = await getQuizById(quizId);
+      let questionIds = quiz.questionIds;
+
+      // Fetch details of each question
+      questions = await Promise.all(questionIds.map(async questionId => {
         let question = await getQuestionById(questionId);
-        return question;
-    }));
+        return {
+          id: question.id,
+          description: question.description,
+          choices: question.choices,
+          correctAnswer: question.answer // Storing correct answer
+        };
+      }));
 
-    // Display the first question
-    displayQuestionById(questions[0].id);
-}
-async function getQuestionById(questionId) {
-    let response = await fetch(`${host}/questions/${questionId}`);
-    let question = await response.json();
-    return question;
-}
+      // Display the first question
+      displayQuestionById(questions[0].id);
 
-let currentQuestionIndex = 0; // Variable to keep track of the current question index
+      // Show the Next button
+      document.getElementById("nextButton").style.display = "block";
+    }
 
-// Function to display the next question
-function nextQuestion() {
-    // Increment the current question index
-    currentQuestionIndex++;
+    async function getQuestionById(questionId) {
+      let response = await fetch(`${host}/questions/${questionId}`);
+      let question = await response.json();
+      return question;
+    }
 
-    // Check if there are more questions
-    if (currentQuestionIndex < questions.length) {
+    let currentQuestionIndex = 0; // Variable to keep track of the current question index
+
+    // Function to display the question number out of total questions
+    function updateQuestionNumber() {
+      const questionNumberLabel = document.getElementById("questionNumber");
+      questionNumberLabel.textContent = `${currentQuestionIndex + 1} / ${questions.length}`;
+    }
+
+    function nextQuestion() {
+      // Increment the current question index
+      currentQuestionIndex++;
+
+      // Check if there are more questions
+      if (currentQuestionIndex < questions.length) {
         // Display the next question
         displayQuestionById(questions[currentQuestionIndex].id);
-    } else {
-        // If there are no more questions, you can handle this scenario here
-        console.log("No more questions.");
+        // Update the question number label
+        updateQuestionNumber();
+        // Show the "Previous" button
+        document.getElementById("previousButton").style.display = "block";
+      } else {
+        // If there are no more questions, change the button to submit
+        document.getElementById("nextButton").style.display = "none";
+        // Create a submit button
+        const submitButton = document.createElement("button");
+        submitButton.textContent = "Submit";
+        submitButton.setAttribute("onclick", "submitQuiz()");
+        // Append submit button to the same container as next button
+        document.getElementById("list").appendChild(submitButton);
+      }
     }
-}
 
-// Function to display the previous question (if needed)
-function previousQuestion() {
-    // Decrement the current question index
-    currentQuestionIndex--;
 
-    // Check if the current question index is valid
-    if (currentQuestionIndex >= 0) {
+    // Function to display the previous question (if needed)
+    function previousQuestion() {
+      // Decrement the current question index
+      currentQuestionIndex--;
+
+      // Check if the current question index is valid
+      if (currentQuestionIndex >= 0) {
         // Display the previous question
         displayQuestionById(questions[currentQuestionIndex].id);
-    } else {
+        // Update the question number label
+        updateQuestionNumber();
+      } else {
         // If the current question index is less than 0, it means it's the first question
         console.log("Already at the first question.");
+        // Hide the "Previous" button if it's the first question
+        document.getElementById("previousButton").style.display = "none";
+      }
     }
-}
 
+    // Display quizzes when the page loads
+    window.onload = () => {
+      // Hide the Next and Submit buttons initially
+      document.getElementById("nextButton").style.display = "none";
+      document.getElementById("submitButton").style.display = "none";
+      displayTheQuizzes();
+      updateQuestionNumber(); // Update question number on page load
+    };
+    function submitQuiz() {
+      let correctCount = 0;
 
+      // Loop through user answers and compare with correct answers
+      for (let i = 0; i < questions.length; i++) {
+        const question = questions[i];
+        const userAnswer = userAnswers[i];
+        if (userAnswer === question.correctAnswer) {
+          correctCount++;
+        }
+      }
 
+      // Display the result in an alert box
+      alert(`You got ${correctCount} out of ${questions.length} questions right.`);
+    }
 
+    // Function to handle form submission
+    function handleFormSubmit(event) {
+      event.preventDefault(); // Prevent default form submission behavior
+      const form = event.target;
+      const formData = new FormData(form);
+      const selectedAnswer = formData.get('answer');
+      userAnswers[currentQuestionIndex] = selectedAnswer; // Store user's answer
+      nextQuestion(); // Move to the next question
+    }
 
+    // Add event listener for form submission
+    document.getElementById('questionContainer').addEventListener('submit', handleFormSubmit);
 
+    // Display quizzes when the page loads
+    window.onload = displayTheQuizzes;
 
-        // Display quizzes when the page loads
-        window.onload = displayTheQuizzes;
-      
-    </script>
-  </body>
+  </script>
+
+</body>
+
 </html>
-
