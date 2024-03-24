@@ -3,36 +3,43 @@
 
 <style>
   /* CSS for dividing the page into two boxes */
-
-
   .box {
-    width: 95%;
-    /* Adjust as needed */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border: 1px solid #ccc;
-    padding: 10px;
-  }
+            width: 95%;
+            /* Adjust as needed */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
 
-  .up,
-  .down {
-    height: 50%;
-    /* Each box takes 50% of the height */
-    border: 1px solid #ccc;
-    margin-bottom: 10px;
-    overflow: auto;
-    /* Add scrollbars if content overflows */
-  }
+        .up,
+        .down {
+            height: 50%;
+            /* Each box takes 50% of the height */
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            overflow: auto;
+            /* Add scrollbars if content overflows */
+        }
 
-  /* Hide the Next, Submit, and Previous buttons by default */
-  #nextButton,
-  #submitButton,
-  #previousButton {
-    display: none;
-  }
+        /* Hide the Next, Submit, and Previous buttons by default */
+        #nextButton,
+        #submitButton,
+        #previousButton {
+            display: none;
+        }
 
-  /* Add any additional styles for specific elements if needed */
+        /* Add any additional styles for specific elements if needed */
+        #navigationButtons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #questionNumber {
+            text-align: center;
+        }
 </style>
 
 
@@ -63,6 +70,7 @@
     <div class="box">
       <div class="up" id="quizContainer"></div>
       <div class="down" id="questionContainer"></div>
+
     </div>
     <!-- Second box -->
     <div class="box">
@@ -131,28 +139,40 @@
     }
 
     let userAnswers = []; // Array to store user answers
+    let currectAnswers = []; // array to store the correct answers
 
     async function displayQuestionById(questionId) {
       let question = questions.find(q => q.id === questionId);
       if (question) {
         let questionContainer = document.getElementById("questionContainer");
         questionContainer.innerHTML = `
-        <div class="card">
-            <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
-            <div class="container">
-                <h4><b>${question.id}</b></h4> 
-                <p>${question.description}</p>
-                <form id="questionForm">
-                    <input type="radio" id="optionA" name="answer" value="A">
-                    <label for="optionA">${question.choices[0]}</label><br>
-                    <input type="radio" id="optionB" name="answer" value="B">
-                    <label for="optionB">${question.choices[1]}</label><br>
-                    <input type="radio" id="optionC" name="answer" value="C">
-                    <label for="optionC">${question.choices[2]}</label><br>       
-                </form> 
-            </div>
-        </div>
+      <div class="card">
+          <img src="${host}/questions/${question.id}/image" alt="question" style="width:100%">
+          <div class="container">
+              <h4><b>${question.id}</b></h4> 
+              <p>${question.description}</p>
+              <form id="questionForm">
+                  <input type="radio" id="optionA" name="answer" value="0">
+                  <label for="optionA">${question.choices[0]}</label><br>
+                  <input type="radio" id="optionB" name="answer" value="1">
+                  <label for="optionB">${question.choices[1]}</label><br>
+                  <input type="radio" id="optionC" name="answer" value="2">
+                  <label for="optionC">${question.choices[2]}</label><br>       
+              </form> 
+          </div>
+      </div>
     `;
+
+        // Get all radio buttons within the form
+        const radioButtons = document.querySelectorAll('#questionForm input[type="radio"]');
+
+        // Add event listener to each radio button
+        radioButtons.forEach(button => {
+          button.addEventListener('change', function () {
+            // Store the selected answer in the userAnswers array at the current question index
+            userAnswers[currentQuestionIndex] = question.choices[button.value];
+          });
+        });
       }
     }
 
@@ -198,7 +218,18 @@
 
       // Show the Next button
       document.getElementById("nextButton").style.display = "block";
+
+      // Log the answers to the console
+      questions.forEach(question => {
+        console.log(`Question: ${question.description}`);
+        console.log(`Correct Answer: ${question.correctAnswer}`);
+        // Add a new property to store user's answer
+
+
+
+      });
     }
+
 
     async function getQuestionById(questionId) {
       let response = await fetch(`${host}/questions/${questionId}`);
@@ -266,31 +297,74 @@
       displayTheQuizzes();
       updateQuestionNumber(); // Update question number on page load
     };
+    // function submitQuiz() {
+    //   let correctCount = 0;
+
+    //   // Loop through questions and compare user answers with correct answers
+    //   questions.forEach(question => {
+    //     console.log(`Question: ${question.description}`);
+    //     console.log(`Correct Answer: ${question.correctAnswer}`);
+    //     console.log(`User's Answer: ${userAnswers[question.id]}`);
+        
+    //   });
+    //   // if (userAnswers[question.id] == question.correctAnswer) {
+    //   //   console.log(question.correctAnswer);
+    //   //   console.log(`User's Answer: ${userAnswers[question.id]}`);
+    //   //   correctCount++;
+    //   // }
+    //   for (let i = 0; i < questions.length; i++) {
+    //     if (userAnswers[i-1] == correctAnswers[i]) {
+    //       console.log(`User's Answer: ${userAnswers[i]}`);
+    //       console.log(`Correct Answer: ${correctAnswers[i]}`);
+    //       correctCount++;
+    //     }
+    //   }
+
+    //   // Display the result in an alert box
+    //   alert(`You got ${correctCount} out of ${questions.length} questions right.`);
+    // }
     function submitQuiz() {
-      let correctCount = 0;
+  let correctCount = 0;
 
-      // Loop through user answers and compare with correct answers
-      for (let i = 0; i < questions.length; i++) {
-        const question = questions[i];
-        const userAnswer = userAnswers[i];
-        if (userAnswer === question.correctAnswer) {
-          correctCount++;
-        }
-      }
-
-      // Display the result in an alert box
-      alert(`You got ${correctCount} out of ${questions.length} questions right.`);
+  // Loop through questions and compare user answers with correct answers
+  questions.forEach((question, index) => {
+    console.log(`Question: ${question.description}`);
+    console.log(`Correct Answer: ${question.correctAnswer}`);
+    console.log(`User's Answer: ${userAnswers[index]}`);
+    
+    // Check if the user's answer matches the correct answer
+    if (userAnswers[index] === question.correctAnswer) {
+      correctCount++;
     }
+  });
+
+  // Display the result in an alert box
+  alert(`You got ${correctCount} out of ${questions.length} questions right.`);
+}
+
+
+
+
+
+
 
     // Function to handle form submission
     function handleFormSubmit(event) {
       event.preventDefault(); // Prevent default form submission behavior
+
+      // Retrieve the form element containing the radio buttons
       const form = event.target;
-      const formData = new FormData(form);
-      const selectedAnswer = formData.get('answer');
-      userAnswers[currentQuestionIndex] = selectedAnswer; // Store user's answer
-      nextQuestion(); // Move to the next question
+
+      // Retrieve the selected answer from the radio buttons
+      const selectedAnswer = form.querySelector('input[name="answer"]:checked').value;
+
+      // Store the user's answer in the userAnswers array at the current question index
+      userAnswers[currentQuestionIndex] = selectedAnswer;
+
+      // Move to the next question
+      nextQuestion();
     }
+
 
     // Add event listener for form submission
     document.getElementById('questionContainer').addEventListener('submit', handleFormSubmit);
